@@ -164,6 +164,67 @@ router.post('/group-send-image', zaloController.groupSendImage);
 
 /**
  * @swagger
+ * /zalo/login-qr:
+ *   post:
+ *     summary: Tạo QR code để đăng nhập Zalo
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 sessionId:
+ *                   type: string
+ *                   description: ID phiên đăng nhập, dùng để kiểm tra trạng thái
+ *                 data:
+ *                   type: string
+ *                   description: Dữ liệu QR code
+ */
+router.post('/login-qr', zaloController.loginQR);
+
+/**
+ * @swagger
+ * /zalo/login-info:
+ *   post:
+ *     tags: [Zalo]
+ *     summary: Kiểm tra trạng thái đăng nhập QR
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - sessionId
+ *             properties:
+ *               sessionId:
+ *                 type: string
+ *                 description: ID phiên đăng nhập từ API login-qr
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [waiting, success, error, expired, not_found]
+ *                   description: Trạng thái đăng nhập
+ *                 message:
+ *                   type: string
+ *                   description: Thông báo chi tiết (nếu có)
+ *                 data:
+ *                   type: object
+ *                   description: Thông tin người dùng (chỉ có khi status là success)
+ */
+router.post('/login-info', zaloController.getLoginInfo);
+
+/**
+ * @swagger
  * /zalo/add-friend:
  *   post:
  *     summary: Kết bạn
