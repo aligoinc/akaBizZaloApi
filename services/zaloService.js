@@ -1,8 +1,11 @@
+import { Zalo } from 'zca-js';
 import zaloWebApi from '../apiclients/zaloWebApi.js';
 
 /**
  * Service layer cho các API Zalo Web
  */
+let GLOBAL_LOGIN_SESSION = {};
+
 const zaloService = {
   async getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language) {
     return zaloWebApi.getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language);
@@ -99,6 +102,105 @@ const zaloService = {
   },
   async groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content) {
     return zaloWebApi.groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+  },
+  async loginQR() {
+    return new Promise((resolve, reject) => {
+      try {
+        const sessionId = Date.now() + "_" + Math.random().toString(36).substring(2, 15);
+
+        const zalo = new Zalo({
+          // agent: new HttpsProxyAgent(
+          //   `http://${proxy.username}:${proxy.password}@${proxy.ip}:${proxy.portHttp}`
+          // ),
+          // polyfill: nodefetch,
+          selfListen: true, // mặc định false, lắng nghe sự kiện của bản thân
+          checkUpdate: true, // mặc định true, kiểm tra update
+          logging: true, // mặc định true, bật/tắt log mặc định của thư viện
+        });
+
+        // Lưu process login
+        GLOBAL_LOGIN_SESSION[sessionId] = {
+          status: "waiting",
+          data: null,
+          timestamp: Date.now()
+        };
+
+        // Tạo QR
+        zalo.loginQR({
+          userAgent: "", // không bắt buộc
+          qrPath: "", // đường dẫn lưu QR, mặc định ./qr.png
+        }, (qrcode) => {
+          // Trả về sessionId và data QR code
+          resolve({
+            sessionId,
+            data: qrcode
+          });
+        }).then(api => {
+          // Khi user quét xong QR và đăng nhập, kết quả trả ra ở đây
+          api.fetchAccountInfo().then(user => {
+            GLOBAL_LOGIN_SESSION[sessionId].status = "success";
+            GLOBAL_LOGIN_SESSION[sessionId].data = { ctx: api.getContext(), user };
+          });
+        }).catch(err => {
+          GLOBAL_LOGIN_SESSION[sessionId].status = "error";
+          GLOBAL_LOGIN_SESSION[sessionId].error = "QR code đã hết hạn";
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  },
+  async getLoginInfo(sessionId) {
+    try {
+      const session = GLOBAL_LOGIN_SESSION[sessionId];
+      if (!session) {
+        return {
+          status: -1,
+          message: "Session không tồn tại hoặc đã hết hạn"
+        };
+      }
+
+      const { status, data, error, timestamp } = session;
+      
+      // Check if QR code is expired (after 2 minutes)
+      const now = Date.now();
+      const expirationTime = 2 * 60 * 1000; // 2 minutes in milliseconds
+      
+      if (now - timestamp > expirationTime && status === "waiting") {
+        delete GLOBAL_LOGIN_SESSION[sessionId];
+        return {
+          status: -1,
+          message: "QR code đã hết hạn"
+        };
+      }
+
+      // Return appropriate response based on status
+      if (status === "waiting") {
+        return {
+          status: 0,
+          message: "Đang chờ quét QR"
+        };
+      } else if (status === "success") {
+        // Clean up session data after successful retrieval
+        delete GLOBAL_LOGIN_SESSION[sessionId];
+        return {
+          status: 1,
+          data: data
+        };
+      } else if (status === "error") {
+        // Clean up session data after error retrieval
+        delete GLOBAL_LOGIN_SESSION[sessionId];
+        return {
+          status: -2,
+          message: error
+        };
+      }
+    } catch (error) {
+      return {
+        status: -2,
+        message: error.message
+      };
+    }
   },
 };
 

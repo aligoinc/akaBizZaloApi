@@ -1,5 +1,4 @@
 import fetch from "node-fetch";
-import FormData from "form-data";
 import {
   createEncryptKey,
   decodeAES,
@@ -156,9 +155,6 @@ const zaloWebApi = {
       });
   },
   uploadImage: async (cookie, imei, secretKey, id, file) => {
-    // Đảm bảo id luôn là string
-    const safeId = id.toString();
-    // console.log('uploadImage id:', safeId); // Bỏ comment dòng này để debug nếu cần
     const params = encodeURIComponent(
       encodeAESwithSecretKey(
         secretKey,
@@ -169,7 +165,7 @@ const zaloWebApi = {
           totalSize: file.size,
           imei: imei,
           chunkId: 1,
-          toid: safeId,
+          toid: id,
           //isE2EE: 0,
           jxl: 1,
         })
@@ -177,10 +173,7 @@ const zaloWebApi = {
     );
 
     const formData = new FormData();
-    formData.append("chunkContent", file.buffer, {
-      filename: file.originalname,
-      contentType: file.mimetype,
-    });
+    formData.append("chunkContent", file);
 
     const url = `https://tt-files-wpa.chat.zalo.me/api/message/photo_original/upload?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}&type=2`;
     return fetch(url, {

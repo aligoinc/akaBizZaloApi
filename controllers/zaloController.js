@@ -230,6 +230,37 @@ const zaloController = {
       res.status(500).json({ error: error.message });
     }
   },
+  async loginQR(req, res) {
+    try {
+      const result = await zaloService.loginQR();
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ 
+        status: -2, 
+        message: error.message
+      });
+    }
+  },
+  
+  async getLoginInfo(req, res) {
+    try {
+      const { sessionId } = req.body;
+      if (!sessionId) {
+        return res.status(400).json({ 
+          status: -1, 
+          message: "Session ID is required" 
+        });
+      }
+      
+      const result = await zaloService.getLoginInfo(sessionId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ 
+        status: -2,
+        message: error.message
+      });
+    }
+  }
 };
 
 export default zaloController;
