@@ -743,6 +743,46 @@ const zaloWebApi = {
         throw error;
       });
   },
+  getGroupByLink: (cookie, imei, secretKey, link, mpage) => {
+    const params = encodeURIComponent(
+      encodeAESwithSecretKey(
+        secretKey,
+        JSON.stringify({
+          link: link,
+          avatar_size: 120,
+          member_avatar_size: 120,
+          mpage: mpage,
+        })
+      )
+    );
+    
+    const url = `https://tt-group-wpa.chat.zalo.me/api/group/link/ginfo?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}`;
+
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        Cookie: cookie,
+      },
+      redirect: "follow",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        return result.data
+          ? JSON.parse(decodeAESwithSecretKey(secretKey, result.data))
+          : result;
+      })
+      .catch((error) => {
+        // Xử lý lỗi ở đây nếu cần
+        console.error("Fetch error:", error);
+        throw error;
+      });
+  },
   getGroupMemberIds: (cookie, imei, secretKey, id) => {
     const params = encodeAESwithSecretKey(
       secretKey,

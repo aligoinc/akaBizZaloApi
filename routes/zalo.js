@@ -381,9 +381,33 @@ router.post('/get-req-status', zaloController.getReqStatus);
 
 /**
  * @swagger
- * /zalo/get-group-ids:
+ * /zalo/get-groups:
  *   post:
  *     summary: Lấy danh sách group
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post('/get-groups', zaloController.getGroups);
+
+/**
+ * @swagger
+ * /zalo/get-group-ids:
+ *   post:
+ *     summary: Lấy danh sách group id
  *     requestBody:
  *       required: true
  *       content:
@@ -430,6 +454,58 @@ router.post('/get-group-ids', zaloController.getGroupIds);
  *         description: Thành công
  */
 router.post('/get-group-infos', zaloController.getGroupInfos);
+
+/**
+ * @swagger
+ * /zalo/get-group-members:
+ *   post:
+ *     summary: Lấy danh sách thành viên nhóm
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *               id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post('/get-group-members', zaloController.getGroupMembers);
+
+/**
+ * @swagger
+ * /zalo/get-group-members-by-link:
+ *   post:
+ *     summary: Lấy danh sách thành viên nhóm bằng link
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *               link:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post('/get-group-members-by-link', zaloController.getGroupMembersByLink);
 
 /**
  * @swagger
