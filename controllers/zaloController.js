@@ -58,6 +58,15 @@ const zaloController = {
       res.status(500).json({ error: error.message });
     }
   },
+  async getGroups(req, res) {
+    try {
+      const { cookie, imei, secretKey } = req.body;
+      const result = await zaloService.getGroups(cookie, imei, secretKey);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
   async getGroupIds(req, res) {
     try {
       const { cookie, imei, secretKey } = req.body;
@@ -71,6 +80,24 @@ const zaloController = {
     try {
       const { cookie, imei, secretKey, ids } = req.body;
       const result = await zaloService.getGroupInfos(cookie, imei, secretKey, ids);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  async getGroupMembers(req, res) {
+    try {
+      const { cookie, imei, secretKey, id } = req.body;
+      const result = await zaloService.getGroupMembers(cookie, imei, secretKey, id);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  async getGroupMembersByLink(req, res) {
+    try {
+      const { cookie, imei, secretKey, link } = req.body;
+      const result = await zaloService.getGroupMembersByLink(cookie, imei, secretKey, link);
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
