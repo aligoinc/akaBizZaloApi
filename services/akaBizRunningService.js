@@ -10,6 +10,7 @@ import {
 import { Zalo } from "zca-js";
 import {
   SEND_TO_FRIEND,
+  SEND_TO_GROUP,
   SEND_TO_GROUP_MEMBER,
   SEND_TO_PHONE,
 } from "../constants/campaignActionContant.js";
@@ -29,7 +30,7 @@ const start = async () => {
         shops = resGetShop.data;
       }
       for (let shop of shops) {
-        if (!runningShopIds.includes(shop.id)) {
+        if (!runningShopIds.includes(shop.id) && shop.accountId !== 809) {
           (async () => {
             runningShopIds.push(shop.id);
             await runCampaign(shop);
@@ -610,6 +611,85 @@ const runCampaign = async (shop) => {
               await sleep(campaign.timeSleepBetween2 * 1000);
             }
           }
+        } else if (campaign.campaignActionId === SEND_TO_GROUP) {
+          let contents = (campaign.contentMessage ?? "")
+            .split("|")
+            .map((content) => content.trim())
+            .filter((content) => content);
+          if (contents.length == 0) contents.push("");
+          let iContent = 0;
+
+          for (let i = 0; i < campaign.details.length; i++) {
+            try {
+              // Kiểm tra giới hạn gửi trong ngày
+              if (
+                countProcessed >= (campaign.countSendingOfDay ?? 0) ||
+                countProcessed >= (campaign.countSendingOfHour ?? 9)
+              )
+                break;
+
+              let content = contents[iContent]
+                .replaceAll("[fullname]", campaign.details[i].name ?? "")
+                .replaceAll("[phone]", campaign.details[i].phone ?? "")
+                .replaceAll("[email]", campaign.details[i].email ?? "")
+                .replaceAll("[info1]", campaign.details[i].info1 ?? "")
+                .replaceAll("[info2]", campaign.details[i].info2 ?? "")
+                .replaceAll("[info3]", campaign.details[i].info3 ?? "")
+                .replaceAll("[info4]", campaign.details[i].info4 ?? "")
+                .replaceAll("[info5]", campaign.details[i].info5 ?? "");
+
+              // Thực hiện gửi tin nhắn
+              let resSendToGroup = await sendToGroup(
+                api,
+                shop.zaloCookies,
+                shop.zaloImei,
+                shop.zaloSecretKey,
+                campaign.shopId,
+                campaign.details[i].name,
+                campaign.details[i].groupUserId?.replace("g", ""),
+                content,
+                campaign.isContentAI,
+                campaign.media,
+                campaign.isSendFolderMedia,
+                campaign.isRandomFolderMedia,
+                campaign.countRandomFolderMedia
+              );
+              iContent++;
+              if (iContent >= contents.length) iContent = 0;
+
+              // Cập nhật trạng thái detail
+              await campaignApi.changeStatusCampaignDetail2({
+                id: campaign.details[i].id,
+                status: resSendToGroup.status,
+                errorMessage: resSendToGroup.message,
+                contentMessage: resSendToGroup.content?.slice(0, 4000) ?? "",
+                name: resSendToGroup.info?.name ?? null,
+              });
+
+              // addNote(
+              //   `${getDateTimeNow()} - Inbox đến bạn bè - ${
+              //     campaign.details[i].name
+              //   } - ${resSendToFriend.message}`
+              // );
+              countProcessed++;
+              await sleep(campaign.timeSleepBetween2 * 1000);
+            } catch (e) {
+              console.log("Lỗi khi Inbox đến group: ", e);
+              // Cập nhật trạng thái detail
+              await campaignApi.changeStatusCampaignDetail(
+                campaign.details[i].id,
+                10,
+                "Có lỗi xảy ra"
+              );
+
+              // addNote(
+              //   `${getDateTimeNow()} - Inbox đến group - ${
+              //     campaign.details[i].name
+              //   } - Thất bại - Có lỗi xảy ra`
+              // );
+              await sleep(campaign.timeSleepBetween2 * 1000);
+            }
+          }
         }
         // Kết thúc
         // if (isLimitSearchPhone) {
@@ -962,6 +1042,140 @@ const sendToPhone = async (
       status: 10,
       message: "Có lỗi xảy ra",
       contentSms: contentSms,
+    };
+  }
+};
+
+const sendToGroup = async (
+  api,
+  cookie,
+  imei,
+  secretKey,
+  shopId,
+  name,
+  zid,
+  content,
+  isContentAI,
+  media,
+  isSendFolderMedia,
+  isRandomFolderMedia,
+  countRandomFolderMedia
+) => {
+  try {
+    let info = { name: name };
+
+    content = content.replaceAll(
+      "[fullname_original]",
+      info?.originalName ?? "[fullname_web]"
+    );
+    content = replaceVocative(
+      content?.replaceAll("[fullname_web]", info?.name ?? ""),
+      info?.gender
+    );
+
+    // if (isContentAI && content?.trim()) {
+    //   content = (
+    //     await aiApi.chat2(content, "write_content", shopId, "zalo_extension")
+    //   )?.data;
+    // }
+    let images = [];
+    if (media) {
+      images = media.split("|");
+      if (isSendFolderMedia && isRandomFolderMedia)
+        images = getRandomArray(images, countRandomFolderMedia);
+      if (!isSendFolderMedia) images = images.slice(0, 1);
+    }
+
+    let resSendMessage;
+    if (images && images?.length == 1) {
+      const blob = await urlToBlob(images[0]);
+      const resUpload = await zaloWebApi.uploadImage(
+        cookie,
+        imei,
+        secretKey,
+        zid,
+        blob
+      );
+      const imgUrl = resUpload.data.normalUrl;
+      const imgInfo = await getInfoImageFromUrl(imgUrl);
+      resSendMessage = await zaloWebApi.groupSendImage(
+        cookie,
+        imei,
+        secretKey,
+        zid,
+        imgUrl,
+        imgInfo,
+        content
+      );
+    } else {
+      const groupLayoutId = Date.now();
+      for (let iImg = 0; iImg < (images?.length ?? 0); iImg++) {
+        try {
+          const blob = await urlToBlob(images[iImg]);
+          const resUpload = await zaloWebApi.uploadImage(
+            cookie,
+            imei,
+            secretKey,
+            zid,
+            blob
+          );
+          const imgUrl = resUpload.data.normalUrl;
+          const imgInfo = await getInfoImageFromUrl(imgUrl);
+          resSendMessage = await zaloWebApi.groupSendImage(
+            cookie,
+            imei,
+            secretKey,
+            zid,
+            imgUrl,
+            imgInfo,
+            "",
+            true,
+            groupLayoutId,
+            images.length,
+            1,
+            iImg
+          );
+          if (resSendMessage.error_code != 0) {
+            return {
+              status: 10,
+              message: resSendMessage.error_message,
+              content: content,
+              info: info,
+            };
+          }
+        } catch (error) {
+          console.log("Có lỗi khi gửi ảnh: ", error);
+        }
+      }
+      if (content?.trim())
+        resSendMessage = await zaloWebApi.groupSendMsg(
+          cookie,
+          imei,
+          secretKey,
+          zid,
+          content
+        );
+    }
+
+    if (resSendMessage.error_code == 0)
+      return {
+        status: 2,
+        message: "Gửi tin nhắn thành công",
+        content: content,
+        info: info,
+      };
+    else
+      return {
+        status: 10,
+        message: resSendMessage.error_message,
+        content: content,
+        info: info,
+      };
+  } catch (e) {
+    console.log("Lỗi khi thực hiện Inbox đến group: ", e);
+    return {
+      status: 10,
+      message: e,
     };
   }
 };
