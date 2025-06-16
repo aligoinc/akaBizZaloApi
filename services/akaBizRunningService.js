@@ -10,6 +10,8 @@ import {
 import { Zalo } from "zca-js";
 import {
   ADD_MEMBER_TO_GROUP,
+  CANCEL_REQUEST,
+  SEND_HPBD,
   SEND_TO_FRIEND,
   SEND_TO_GROUP,
   SEND_TO_GROUP_MEMBER,
