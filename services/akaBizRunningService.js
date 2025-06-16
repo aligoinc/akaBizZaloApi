@@ -70,6 +70,7 @@ const runCampaign = async (shop) => {
         });
         const api = await zalo.login(JSON.parse(shop.zaloLoginData));
         let countProcessed = 0;
+        let isLimitSearchPhone = false;
         if (campaign.campaignActionId === SEND_TO_PHONE) {
           let contents = (campaign.contentMessage ?? "")
             .split("|")
@@ -193,6 +194,10 @@ const runCampaign = async (shop) => {
                 nameToChange,
                 contentSms
               );
+              if (resSendToPhone.status == 1) {
+                isLimitSearchPhone = true;
+                break;
+              }
 
               iContent++;
               if (iContent >= contents.length) iContent = 0;
@@ -724,12 +729,17 @@ const runCampaign = async (shop) => {
                   campaign.timeSleepBetween2
                 );
                 for (const resDetail of resAddMemberToGroups.resDetails) {
-                  // Cập nhật trạng thái detail
-                  await campaignApi.changeStatusCampaignDetail2({
-                    id: resDetail.id,
-                    status: resDetail.status,
-                    errorMessage: resDetail.message,
-                  });
+                  if (resDetail.status != 1)
+                    // Cập nhật trạng thái detail
+                    await campaignApi.changeStatusCampaignDetail2({
+                      id: resDetail.id,
+                      status: resDetail.status,
+                      errorMessage: resDetail.message,
+                    });
+                }
+                if (resAddMemberToGroups.isLimitSearchPhone) {
+                  isLimitSearchPhone = true;
+                  break;
                 }
                 addGroupDetails = [];
                 if (
@@ -763,47 +773,48 @@ const runCampaign = async (shop) => {
           }
         }
         // Kết thúc
-        // if (isLimitSearchPhone) {
-        //   const newSchedule = new Date();
-        //   newSchedule.setHours(newSchedule.getHours() + 8);
-        //   await campaignApi.changeScheduleCampaign({
-        //     id: campaign.id,
-        //     schedule: newSchedule,
-        //   });
-        //   // addNote(
-        //   //   `${getDateTimeNow()} - Chiến dịch ${
-        //   //     campaign.name
-        //   //   } - Hết lượt tìm kiếm SĐT - Tạm nghỉ 60 phút`
-        //   // );
-        //   // await sleep(3000);
-        // }
-        if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
-          if (
-            (i == campaign.details.length &&
-              campaign.campaignActionId != SEND_HPBD &&
-              campaign.campaignActionId != CANCEL_REQUEST) ||
-            (campaign.campaignActionId == CANCEL_REQUEST &&
-              countProcessed + (campaign.countActionProcessed ?? 0) >=
-                (campaign.countPost ?? 0))
-          ) {
+        if (isLimitSearchPhone) {
+          const newSchedule = new Date();
+          newSchedule.setHours(newSchedule.getHours() + 8);
+          newSchedule.setMinutes(0, 0, 0);
+          await campaignApi.changeScheduleCampaign({
+            id: campaign.id,
+            schedule: newSchedule,
+          });
+          // addNote(
+          //   `${getDateTimeNow()} - Chiến dịch ${
+          //     campaign.name
+          //   } - Hết lượt tìm kiếm SĐT - Tạm nghỉ 60 phút`
+          // );
+        } else {
+          if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
+            if (
+              (i == campaign.details.length &&
+                campaign.campaignActionId != SEND_HPBD &&
+                campaign.campaignActionId != CANCEL_REQUEST) ||
+              (campaign.campaignActionId == CANCEL_REQUEST &&
+                countProcessed + (campaign.countActionProcessed ?? 0) >=
+                  (campaign.countPost ?? 0))
+            ) {
+              await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
+              // addNote(
+              //   `${getDateTimeNow()} - Chiến dịch ${
+              //     campaign.name
+              //   } - Kết thúc - Hết lượt gửi trong ngày`
+              // );
+            } else {
+              // addNote(
+              //   `${getDateTimeNow()} - Chiến dịch ${
+              //     campaign.name
+              //   } - Tạm dừng - Hết lượt gửi trong ngày`
+              // );
+            }
+          } else {
             await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
             // addNote(
-            //   `${getDateTimeNow()} - Chiến dịch ${
-            //     campaign.name
-            //   } - Kết thúc - Hết lượt gửi trong ngày`
-            // );
-          } else {
-            // addNote(
-            //   `${getDateTimeNow()} - Chiến dịch ${
-            //     campaign.name
-            //   } - Tạm dừng - Hết lượt gửi trong ngày`
+            //   `${getDateTimeNow()} - Chiến dịch ${campaign.name} - Kết thúc`
             // );
           }
-        } else {
-          await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
-          // addNote(
-          //   `${getDateTimeNow()} - Chiến dịch ${campaign.name} - Kết thúc`
-          // );
         }
       }
     }
@@ -846,7 +857,10 @@ const sendToPhone = async (
       );
       if (resSearchPhone.error_code == 0) {
         zid = resSearchPhone.data?.uid;
-      } else if (resSearchPhone.error_code == 312) {
+      } else if (
+        resSearchPhone.error_code == 312 ||
+        resSearchPhone.error_code == 221
+      ) {
         return {
           status: 1,
         };
@@ -868,7 +882,10 @@ const sendToPhone = async (
       );
       if (resSearchPhone.error_code == 0) {
         zid = resSearchPhone.data?.uid;
-      } else if (resSearchPhone.error_code == 312) {
+      } else if (
+        resSearchPhone.error_code == 312 ||
+        resSearchPhone.error_code == 221
+      ) {
         return {
           status: 1,
         };
@@ -1758,9 +1775,14 @@ const addMembersToGroup = async (
   addGroupDetails,
   timeSleepBetween2
 ) => {
+  let isLimitSearchPhone = false;
   try {
     let memberIds = [];
     for (const detail of addGroupDetails) {
+      if (isLimitSearchPhone) {
+        detail.status = 1;
+        continue;
+      }
       if (!detail.zid) {
         const resSearchPhone = await zaloWebApi.searchPhone(
           cookie,
@@ -1771,17 +1793,19 @@ const addMembersToGroup = async (
         if (resSearchPhone.error_code == 0) {
           detail.zid = resSearchPhone.data?.uid;
           memberIds.push(resSearchPhone.data?.uid);
-        } else if (resSearchPhone.error_code == 312) {
+        } else if (
+          resSearchPhone.error_code == 312 ||
+          resSearchPhone.error_code == 221
+        ) {
+          isLimitSearchPhone = true;
           detail.status = 1;
-          break;
+          continue;
         }
         if (!detail.zid) {
           detail.status = 13;
-          detail.message = "Không tồn tại";
         }
       } else if (!detail.zid) {
         detail.status = 13;
-        detail.message = "Không tồn tại";
       } else memberIds.push(detail.zid);
       await sleep(timeSleepBetween2 * 1000);
     }
@@ -1792,28 +1816,31 @@ const addMembersToGroup = async (
       groupId,
       memberIds
     );
+
     if (resAdd.error_code == 0) {
       for (const detail of addGroupDetails) {
-        if (resAdd.data.errorMembers.includes(detail.zid)) detail.status = 10;
+        if (resAdd.data?.errorMembers?.includes(detail.zid)) detail.status = 10;
         else if (!detail.status) detail.status = 2;
       }
     } else {
       for (const detail of addGroupDetails) {
-        if (!detail.status) detail.status = 2;
+        if (!detail.status) detail.status = 10;
       }
     }
     return {
       resDetails: addGroupDetails,
+      isLimitSearchPhone,
     };
   } catch (e) {
     console.log("Lỗi khi thực hiện thêm thành viên vào group: ", e);
     for (const detail of addGroupDetails) {
-      if (!detail.status) detail.status = 2;
+      if (!detail.status) detail.status = 10;
     }
     return {
       status: 10,
       message: "Có lỗi xảy ra",
       resDetails: addGroupDetails,
+      isLimitSearchPhone,
     };
   }
 };
