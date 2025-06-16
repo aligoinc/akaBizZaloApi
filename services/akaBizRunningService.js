@@ -9,6 +9,7 @@ import {
 } from "../utils/common.js";
 import { Zalo } from "zca-js";
 import {
+  ADD_MEMBER_TO_GROUP,
   SEND_TO_FRIEND,
   SEND_TO_GROUP,
   SEND_TO_GROUP_MEMBER,
@@ -30,7 +31,11 @@ const start = async () => {
         shops = resGetShop.data;
       }
       for (let shop of shops) {
-        if (!runningShopIds.includes(shop.id) && shop.accountId !== 809) {
+        if (
+          !runningShopIds.includes(shop.id) &&
+          shop.zaloLoginData &&
+          shop.accountId !== 809
+        ) {
           (async () => {
             runningShopIds.push(shop.id);
             await runCampaign(shop);
@@ -685,6 +690,72 @@ const runCampaign = async (shop) => {
               // addNote(
               //   `${getDateTimeNow()} - Inbox đến group - ${
               //     campaign.details[i].name
+              //   } - Thất bại - Có lỗi xảy ra`
+              // );
+              await sleep(campaign.timeSleepBetween2 * 1000);
+            }
+          }
+        } else if (campaign.campaignActionId === ADD_MEMBER_TO_GROUP) {
+          let maxSelect = 50;
+          let addGroupDetails = [];
+          for (let i = 0; i < campaign.details.length; i++) {
+            try {
+              // Kiểm tra giới hạn gửi trong ngày
+              if (
+                countProcessed >= (campaign.countSendingOfDay ?? 0) ||
+                countProcessed >= (campaign.countSendingOfHour ?? 9) ||
+                addGroupDetails.length === maxSelect ||
+                i == campaign.details.length - 1
+              ) {
+                if (i == campaign.details.length - 1)
+                  addGroupDetails.push({
+                    id: campaign.details[i].id,
+                    phone: campaign.details[i].phone,
+                    zid: campaign.details[i].groupUserId,
+                  });
+                let resAddMemberToGroups = await addMembersToGroup(
+                  api,
+                  shop.zaloCookies,
+                  shop.zaloImei,
+                  shop.zaloSecretKey,
+                  campaign.shopId,
+                  campaign.shopContactName?.replace("g", ""),
+                  addGroupDetails,
+                  campaign.timeSleepBetween2
+                );
+                for (const resDetail of resAddMemberToGroups.resDetails) {
+                  // Cập nhật trạng thái detail
+                  await campaignApi.changeStatusCampaignDetail2({
+                    id: resDetail.id,
+                    status: resDetail.status,
+                    errorMessage: resDetail.message,
+                  });
+                }
+                addGroupDetails = [];
+                if (
+                  countProcessed >= (campaign.countSendingOfDay ?? 0) ||
+                  countProcessed >= (campaign.countSendingOfHour ?? 9)
+                )
+                  break;
+              }
+              addGroupDetails.push({
+                id: campaign.details[i].id,
+                phone: campaign.details[i].phone,
+                zid: campaign.details[i].groupUserId,
+              });
+              countProcessed++;
+            } catch (e) {
+              console.log("Lỗi khi Inbox/Kết bạn đến SĐT: ", e);
+              // Cập nhật trạng thái detail
+              await campaignApi.changeStatusCampaignDetail(
+                campaign.details[i].id,
+                10,
+                "Có lỗi xảy ra"
+              );
+
+              // addNote(
+              //   `${getDateTimeNow()} - Thêm thành viên vào group ${
+              //     campaign.details[i].phone
               //   } - Thất bại - Có lỗi xảy ra`
               // );
               await sleep(campaign.timeSleepBetween2 * 1000);
@@ -1673,6 +1744,76 @@ const sendToGroupMember = async (
     return {
       status: 10,
       message: "Có lỗi xảy ra",
+    };
+  }
+};
+
+const addMembersToGroup = async (
+  api,
+  cookie,
+  imei,
+  secretKey,
+  shopId,
+  groupId,
+  addGroupDetails,
+  timeSleepBetween2
+) => {
+  try {
+    let memberIds = [];
+    for (const detail of addGroupDetails) {
+      if (!detail.zid) {
+        const resSearchPhone = await zaloWebApi.searchPhone(
+          cookie,
+          imei,
+          secretKey,
+          detail.phone?.replace("0", "84")
+        );
+        if (resSearchPhone.error_code == 0) {
+          detail.zid = resSearchPhone.data?.uid;
+          memberIds.push(resSearchPhone.data?.uid);
+        } else if (resSearchPhone.error_code == 312) {
+          detail.status = 1;
+          break;
+        }
+        if (!detail.zid) {
+          detail.status = 13;
+          detail.message = "Không tồn tại";
+        }
+      } else if (!detail.zid) {
+        detail.status = 13;
+        detail.message = "Không tồn tại";
+      } else memberIds.push(detail.zid);
+      await sleep(timeSleepBetween2 * 1000);
+    }
+    const resAdd = await zaloWebApi.inviteGroup(
+      cookie,
+      imei,
+      secretKey,
+      groupId,
+      memberIds
+    );
+    if (resAdd.error_code == 0) {
+      for (const detail of addGroupDetails) {
+        if (resAdd.data.errorMembers.includes(detail.zid)) detail.status = 10;
+        else if (!detail.status) detail.status = 2;
+      }
+    } else {
+      for (const detail of addGroupDetails) {
+        if (!detail.status) detail.status = 2;
+      }
+    }
+    return {
+      resDetails: addGroupDetails,
+    };
+  } catch (e) {
+    console.log("Lỗi khi thực hiện thêm thành viên vào group: ", e);
+    for (const detail of addGroupDetails) {
+      if (!detail.status) detail.status = 2;
+    }
+    return {
+      status: 10,
+      message: "Có lỗi xảy ra",
+      resDetails: addGroupDetails,
     };
   }
 };
