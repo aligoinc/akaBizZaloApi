@@ -71,6 +71,7 @@ const runCampaign = async (shop) => {
         const api = await zalo.login(JSON.parse(shop.zaloLoginData));
         let countProcessed = 0;
         let isLimitSearchPhone = false;
+        let i = 0;
         if (campaign.campaignActionId === SEND_TO_PHONE) {
           let contents = (campaign.contentMessage ?? "")
             .split("|")
@@ -92,7 +93,7 @@ const runCampaign = async (shop) => {
             .filter((content) => content);
           if (contentSmses.length == 0) contentSmses.push("");
           let iContentSms = 0;
-          for (let i = 0; i < campaign.details.length; i++) {
+          for (i = 0; i < campaign.details.length; i++) {
             try {
               // Kiểm tra giới hạn gửi trong ngày
               if (
@@ -285,7 +286,7 @@ const runCampaign = async (shop) => {
 
           if (campaign.isSendByShareMethod) {
             let paramIds = [];
-            for (let i = 0; i < campaign.details.length; i++) {
+            for (i = 0; i < campaign.details.length; i++) {
               try {
                 paramIds.push({
                   key: i,
@@ -382,7 +383,7 @@ const runCampaign = async (shop) => {
               }
             }
           } else {
-            for (let i = 0; i < campaign.details.length; i++) {
+            for (i = 0; i < campaign.details.length; i++) {
               try {
                 // Kiểm tra giới hạn gửi trong ngày
                 if (
@@ -501,7 +502,7 @@ const runCampaign = async (shop) => {
           if (contentAddFriends.length == 0) contentAddFriends.push("");
           let iContentAddFriend = 0;
 
-          for (let i = 0; i < campaign.details.length; i++) {
+          for (i = 0; i < campaign.details.length; i++) {
             try {
               // Kiểm tra giới hạn gửi trong ngày
               if (
@@ -629,7 +630,7 @@ const runCampaign = async (shop) => {
           if (contents.length == 0) contents.push("");
           let iContent = 0;
 
-          for (let i = 0; i < campaign.details.length; i++) {
+          for (i = 0; i < campaign.details.length; i++) {
             try {
               // Kiểm tra giới hạn gửi trong ngày
               if (
@@ -703,7 +704,7 @@ const runCampaign = async (shop) => {
         } else if (campaign.campaignActionId === ADD_MEMBER_TO_GROUP) {
           let maxSelect = 50;
           let addGroupDetails = [];
-          for (let i = 0; i < campaign.details.length; i++) {
+          for (i = 0; i < campaign.details.length; i++) {
             try {
               // Kiểm tra giới hạn gửi trong ngày
               if (
@@ -712,7 +713,11 @@ const runCampaign = async (shop) => {
                 addGroupDetails.length === maxSelect ||
                 i == campaign.details.length - 1
               ) {
-                if (i == campaign.details.length - 1)
+                if (
+                  countProcessed < (campaign.countSendingOfDay ?? 0) &&
+                  countProcessed < (campaign.countSendingOfHour ?? 9) &&
+                  i == campaign.details.length - 1
+                )
                   addGroupDetails.push({
                     id: campaign.details[i].id,
                     phone: campaign.details[i].phone,
@@ -787,7 +792,26 @@ const runCampaign = async (shop) => {
           //   } - Hết lượt tìm kiếm SĐT - Tạm nghỉ 60 phút`
           // );
         } else {
-          if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
+          if (countProcessed >= (campaign.countSendingOfHour ?? 9)) {
+            if (i == campaign.details.length) {
+              await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
+              // addNote(
+              //   `${getDateTimeNow()} - Chiến dịch ${
+              //     campaign.name
+              //   } - Kết thúc - Giới hạn gửi trong giờ, đang tạm nghỉ ${
+              //     campaign.timeMinuteToCountSending ?? 60
+              //   } phút`
+              // );
+            } else {
+              // addNote(
+              //   `${getDateTimeNow()} - Chiến dịch ${
+              //     campaign.name
+              //   } - Tạm dừng - Giới hạn gửi trong giờ, đang tạm nghỉ ${
+              //     campaign.timeMinuteToCountSending ?? 60
+              //   } phút`
+              // );
+            }
+          } else if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
             if (
               (i == campaign.details.length &&
                 campaign.campaignActionId != SEND_HPBD &&
