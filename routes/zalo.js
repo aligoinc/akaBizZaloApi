@@ -1,6 +1,6 @@
-import express from 'express';
-import zaloController from '../controllers/zaloController.js';
-import multer from 'multer';
+import express from "express";
+import zaloController from "../controllers/zaloController.js";
+import multer from "multer";
 
 const router = express.Router();
 const upload = multer();
@@ -29,7 +29,7 @@ const upload = multer();
  *       200:
  *         description: Thành công
  */
-router.post('/get-profile', zaloController.getProfile);
+router.post("/get-profile", zaloController.getProfile);
 
 /**
  * @swagger
@@ -57,7 +57,7 @@ router.post('/get-profile', zaloController.getProfile);
  *       200:
  *         description: Thành công
  */
-router.post('/sms', zaloController.sms);
+router.post("/sms", zaloController.sms);
 
 /**
  * @swagger
@@ -86,7 +86,7 @@ router.post('/sms', zaloController.sms);
  *       200:
  *         description: Thành công
  */
-router.post('/upload-image', upload.single('file'), zaloController.uploadImage);
+router.post("/upload-image", upload.single("file"), zaloController.uploadImage);
 
 /**
  * @swagger
@@ -123,7 +123,7 @@ router.post('/upload-image', upload.single('file'), zaloController.uploadImage);
  *                 message:
  *                   type: string
  */
-router.post('/send-image', zaloController.sendImage);
+router.post("/send-image", zaloController.sendImage);
 
 /**
  * @swagger
@@ -160,7 +160,7 @@ router.post('/send-image', zaloController.sendImage);
  *                 message:
  *                   type: string
  */
-router.post('/group-send-image', zaloController.groupSendImage);
+router.post("/group-send-image", zaloController.groupSendImage);
 
 /**
  * @swagger
@@ -182,7 +182,7 @@ router.post('/group-send-image', zaloController.groupSendImage);
  *                   type: string
  *                   description: Dữ liệu QR code
  */
-router.post('/login-qr', zaloController.loginQR);
+router.post("/login-qr", zaloController.loginQR);
 
 /**
  * @swagger
@@ -221,7 +221,7 @@ router.post('/login-qr', zaloController.loginQR);
  *                   type: object
  *                   description: Thông tin người dùng (chỉ có khi status là success)
  */
-router.post('/login-info', zaloController.getLoginInfo);
+router.post("/login-info", zaloController.getLoginInfo);
 
 /**
  * @swagger
@@ -249,7 +249,7 @@ router.post('/login-info', zaloController.getLoginInfo);
  *       200:
  *         description: Thành công
  */
-router.post('/add-friend', zaloController.addFriend);
+router.post("/add-friend", zaloController.addFriend);
 
 /**
  * @swagger
@@ -275,7 +275,7 @@ router.post('/add-friend', zaloController.addFriend);
  *       200:
  *         description: Thành công
  */
-router.post('/remove-friend', zaloController.removeFriend);
+router.post("/remove-friend", zaloController.removeFriend);
 
 /**
  * @swagger
@@ -303,7 +303,7 @@ router.post('/remove-friend', zaloController.removeFriend);
  *       200:
  *         description: Thành công
  */
-router.post('/rename', zaloController.rename);
+router.post("/rename", zaloController.rename);
 
 /**
  * @swagger
@@ -327,7 +327,7 @@ router.post('/rename', zaloController.rename);
  *       200:
  *         description: Thành công
  */
-router.post('/get-friends', zaloController.getFriends);
+router.post("/get-friends", zaloController.getFriends);
 
 /**
  * @swagger
@@ -351,7 +351,7 @@ router.post('/get-friends', zaloController.getFriends);
  *       200:
  *         description: Thành công
  */
-router.post('/get-tags', zaloController.getTags);
+router.post("/get-tags", zaloController.getTags);
 
 /**
  * @swagger
@@ -377,7 +377,81 @@ router.post('/get-tags', zaloController.getTags);
  *       200:
  *         description: Thành công
  */
-router.post('/get-req-status', zaloController.getReqStatus);
+router.post("/get-req-status", zaloController.getReqStatus);
+
+/**
+ * @swagger
+ * /zalo/get-received-friend:
+ *   post:
+ *     summary: Lấy lời mời kết bạn đã nhận
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post("/get-received-friend", zaloController.getReceivedFriend);
+
+/**
+ * @swagger
+ * /zalo/get-requested-friend:
+ *   post:
+ *     summary: Lấy lời mời kết bạn đã gửi
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post("/get-requested-friend", zaloController.getRequestedFriend);
+
+/**
+ * @swagger
+ * /zalo/undo-requested-friend:
+ *   post:
+ *     summary: Thu hồi lời mời kết bạn
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *               id:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post("/undo-requested-friend", zaloController.undoRequestedFriend);
 
 /**
  * @swagger
@@ -401,7 +475,7 @@ router.post('/get-req-status', zaloController.getReqStatus);
  *       200:
  *         description: Thành công
  */
-router.post('/get-groups', zaloController.getGroups);
+router.post("/get-groups", zaloController.getGroups);
 
 /**
  * @swagger
@@ -425,7 +499,7 @@ router.post('/get-groups', zaloController.getGroups);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-ids', zaloController.getGroupIds);
+router.post("/get-group-ids", zaloController.getGroupIds);
 
 /**
  * @swagger
@@ -453,7 +527,7 @@ router.post('/get-group-ids', zaloController.getGroupIds);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-infos', zaloController.getGroupInfos);
+router.post("/get-group-infos", zaloController.getGroupInfos);
 
 /**
  * @swagger
@@ -479,7 +553,7 @@ router.post('/get-group-infos', zaloController.getGroupInfos);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-members', zaloController.getGroupMembers);
+router.post("/get-group-members", zaloController.getGroupMembers);
 
 /**
  * @swagger
@@ -505,7 +579,7 @@ router.post('/get-group-members', zaloController.getGroupMembers);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-members-by-link', zaloController.getGroupMembersByLink);
+router.post("/get-group-members-by-link", zaloController.getGroupMembersByLink);
 
 /**
  * @swagger
@@ -531,7 +605,7 @@ router.post('/get-group-members-by-link', zaloController.getGroupMembersByLink);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-member-ids', zaloController.getGroupMemberIds);
+router.post("/get-group-member-ids", zaloController.getGroupMemberIds);
 
 /**
  * @swagger
@@ -559,7 +633,7 @@ router.post('/get-group-member-ids', zaloController.getGroupMemberIds);
  *       200:
  *         description: Thành công
  */
-router.post('/get-group-member-infos', zaloController.getGroupMemberInfos);
+router.post("/get-group-member-infos", zaloController.getGroupMemberInfos);
 
 /**
  * @swagger
@@ -585,7 +659,7 @@ router.post('/get-group-member-infos', zaloController.getGroupMemberInfos);
  *       200:
  *         description: Thành công
  */
-router.post('/leave-group', zaloController.leaveGroup);
+router.post("/leave-group", zaloController.leaveGroup);
 
 /**
  * @swagger
@@ -615,7 +689,7 @@ router.post('/leave-group', zaloController.leaveGroup);
  *       200:
  *         description: Thành công
  */
-router.post('/create-group', zaloController.createGroup);
+router.post("/create-group", zaloController.createGroup);
 
 /**
  * @swagger
@@ -645,7 +719,7 @@ router.post('/create-group', zaloController.createGroup);
  *       200:
  *         description: Thành công
  */
-router.post('/invite-group', zaloController.inviteGroup);
+router.post("/invite-group", zaloController.inviteGroup);
 
 /**
  * @swagger
@@ -673,7 +747,7 @@ router.post('/invite-group', zaloController.inviteGroup);
  *       200:
  *         description: Thành công
  */
-router.post('/group-send-msg', zaloController.groupSendMsg);
+router.post("/group-send-msg", zaloController.groupSendMsg);
 
 /**
  * @swagger
@@ -703,7 +777,7 @@ router.post('/group-send-msg', zaloController.groupSendMsg);
  *       200:
  *         description: Thành công
  */
-router.post('/share-sms', zaloController.shareSms);
+router.post("/share-sms", zaloController.shareSms);
 
 /**
  * @swagger
@@ -743,7 +817,7 @@ router.post('/share-sms', zaloController.shareSms);
  *       200:
  *         description: Thành công
  */
-router.post('/quote', zaloController.quote);
+router.post("/quote", zaloController.quote);
 
 /**
  * @swagger
@@ -783,7 +857,7 @@ router.post('/quote', zaloController.quote);
  *       200:
  *         description: Thành công
  */
-router.post('/quote-group', zaloController.quoteGroup);
+router.post("/quote-group", zaloController.quoteGroup);
 
 /**
  * @swagger
@@ -819,7 +893,7 @@ router.post('/quote-group', zaloController.quoteGroup);
  *       200:
  *         description: Thành công
  */
-router.post('/react-message', zaloController.reactMessage);
+router.post("/react-message", zaloController.reactMessage);
 
 /**
  * @swagger
@@ -855,7 +929,7 @@ router.post('/react-message', zaloController.reactMessage);
  *       200:
  *         description: Thành công
  */
-router.post('/react-message-group', zaloController.reactMessageGroup);
+router.post("/react-message-group", zaloController.reactMessageGroup);
 
 /**
  * @swagger
@@ -881,6 +955,6 @@ router.post('/react-message-group', zaloController.reactMessageGroup);
  *       200:
  *         description: Thành công
  */
-router.post('/search-phone', zaloController.searchPhone);
+router.post("/search-phone", zaloController.searchPhone);
 
 export default router;

@@ -859,7 +859,80 @@ const runCampaign = async (shop) => {
               }
             }
           } else {
-            console.log(resGetFriends.error_message);
+            console.log(
+              `Tài khoản: ${shop.id} - ${shop.name}\nChiến dịch: ${campaign.id} - ${campaign.name}\nLỗi: ${resGetFriends.error_message}`
+            );
+          }
+        } else if (campaign.campaignActionId === CANCEL_REQUEST) {
+          const resGetRequestedFriend = await zaloWebApi.getRequestedFriend(
+            shop.zaloCookies,
+            shop.zaloImei,
+            shop.zaloSecretKey
+          );
+          if (resGetRequestedFriend.error_code === 0) {
+            let requestedFriends = Object.values(
+              resGetRequestedFriend.data
+            ).filter((x) => x.fReqInfo.time !== -1);
+            requestedFriends.sort((a, b) => a.fReqInfo.time - b.fReqInfo.time);
+            requestedFriends = requestedFriends.concat(
+              Object.values(resGetRequestedFriend.data).filter(
+                (x) => x.fReqInfo.time === -1
+              )
+            );
+            for (i = 0; i < requestedFriends.length; i++) {
+              try {
+                if (countProcessed >= (campaign.countSendingOfDay ?? 0)) break;
+                // Kiểm tra số lượng hành động tối đa
+                if (
+                  countProcessed + (campaign.countActionProcessed ?? 0) >=
+                  (campaign.countPost ?? 0)
+                )
+                  break;
+                let resCancelRequest = await zaloWebApi.undoRequestedFriend(
+                  shop.zaloCookies,
+                  shop.zaloImei,
+                  shop.zaloSecretKey,
+                  requestedFriends[i].userId
+                );
+                // Cập nhật trạng thái detail
+                await campaignApi.addCampaignDetail({
+                  campaignId: campaign.id,
+                  status: resCancelRequest.error_code === 0 ? 2 : 10,
+                  errorMessage:
+                    resCancelRequest.error_code === 0
+                      ? null
+                      : resCancelRequest.error_message,
+                  name: requestedFriends[i].displayName ?? null,
+                  uid: requestedFriends[i].userId ?? null,
+                  postLink: requestedFriends[i].avatar ?? null,
+                  friendStatus:
+                    resCancelRequest.error_code === 0
+                      ? FriendStatusConstant.NOT_FRIEND
+                      : FriendStatusConstant.REQ_FRIEND,
+                  dateProcessed: getDateNow(),
+                });
+
+                // addNote(
+                //   `${getDateTimeNow()} - Huỷ lời mời kết bạn - ${
+                //     requestedFriends[i].displayName ?? ""
+                //   } - ${resCancelRequest.error_code === 0 ? "Thành công" : resCancelRequest.error_message}`
+                // );
+                countProcessed++;
+                await sleep(campaign.timeSleepBetween2 * 1000);
+              } catch (e) {
+                console.log("Lỗi khi Huỷ lời mời kết bạn: ", e);
+
+                // addNote(
+                //   `${getDateTimeNow()} - Huỷ lời mời kết bạn - Thất bại - Có lỗi xảy ra`
+                // );
+
+                await sleep(campaign.timeSleepBetween2 * 1000);
+              }
+            }
+          } else {
+            console.log(
+              `Tài khoản: ${shop.id} - ${shop.name}\nChiến dịch: ${campaign.id} - ${campaign.name}\nLỗi: ${resGetRequestedFriend.error_message}`
+            );
           }
         }
         // Kết thúc
@@ -879,7 +952,8 @@ const runCampaign = async (shop) => {
         } else {
           if (
             countProcessed >= (campaign.countSendingOfHour ?? 9) &&
-            campaign.campaignActionId != SEND_HPBD
+            campaign.campaignActionId != SEND_HPBD &&
+            campaign.campaignActionId != CANCEL_REQUEST
           ) {
             if (i == campaign.details.length) {
               await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
@@ -902,6 +976,7 @@ const runCampaign = async (shop) => {
           } else if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
             if (
               (i == campaign.details.length &&
+                campaign.campaignActionId != SEND_HPBD &&
                 campaign.campaignActionId != CANCEL_REQUEST) ||
               (campaign.campaignActionId == CANCEL_REQUEST &&
                 countProcessed + (campaign.countActionProcessed ?? 0) >=

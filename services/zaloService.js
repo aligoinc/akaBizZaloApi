@@ -1,6 +1,6 @@
-import { Zalo } from 'zca-js';
-import zaloWebApi from '../apiclients/zaloWebApi.js';
-import { getUidFromAvatarLink } from '../utils/zaloAction.js';
+import { Zalo } from "zca-js";
+import zaloWebApi from "../apiclients/zaloWebApi.js";
+import { getUidFromAvatarLink } from "../utils/zaloAction.js";
 
 /**
  * Service layer cho các API Zalo Web
@@ -8,8 +8,24 @@ import { getUidFromAvatarLink } from '../utils/zaloAction.js';
 let GLOBAL_LOGIN_SESSION = {};
 
 const zaloService = {
-  async getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language) {
-    return zaloWebApi.getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language);
+  async getSecretKey(
+    cookie,
+    imei,
+    enc_ver,
+    apiType,
+    apiVersion,
+    computerName,
+    language
+  ) {
+    return zaloWebApi.getSecretKey(
+      cookie,
+      imei,
+      enc_ver,
+      apiType,
+      apiVersion,
+      computerName,
+      language
+    );
   },
   async getProfile(cookie, imei, secretKey, id) {
     return zaloWebApi.getProfile(cookie, imei, secretKey, id);
@@ -21,10 +37,26 @@ const zaloService = {
     return zaloWebApi.uploadImage(cookie, imei, secretKey, id, file);
   },
   async sendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content) {
-    return zaloWebApi.sendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+    return zaloWebApi.sendImage(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      imgUrl,
+      imgInfo,
+      content
+    );
   },
   async groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content) {
-    return zaloWebApi.groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+    return zaloWebApi.groupSendImage(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      imgUrl,
+      imgInfo,
+      content
+    );
   },
   async addFriend(cookie, imei, secretKey, id, content) {
     return zaloWebApi.addFriend(cookie, imei, secretKey, id, content);
@@ -44,15 +76,27 @@ const zaloService = {
   async getReqStatus(cookie, imei, secretKey, id) {
     return zaloWebApi.getReqStatus(cookie, imei, secretKey, id);
   },
+  async getReceivedFriend(cookie, imei, secretKey) {
+    return zaloWebApi.getReceivedFriend(cookie, imei, secretKey);
+  },
+  async getRequestedFriend(cookie, imei, secretKey) {
+    return zaloWebApi.getRequestedFriend(cookie, imei, secretKey);
+  },
+  async undoRequestedFriend(cookie, imei, secretKey, id) {
+    return zaloWebApi.undoRequestedFriend(cookie, imei, secretKey, id);
+  },
   async getGroups(cookie, imei, secretKey) {
-    try
-    {
-      const resGetGroupIds = await zaloWebApi.getGroupIds(cookie, imei, secretKey);
+    try {
+      const resGetGroupIds = await zaloWebApi.getGroupIds(
+        cookie,
+        imei,
+        secretKey
+      );
       let groups = [];
       if (resGetGroupIds.error_code !== 0)
         return {
           status: -1,
-          message: resGetGroupIds.error_message
+          message: resGetGroupIds.error_message,
         };
       let groupIds = Object.keys(resGetGroupIds.data.gridVerMap);
       const chunkSizeGroup = 10;
@@ -74,12 +118,11 @@ const zaloService = {
         status: 1,
         data: groups,
       };
-    }
-    catch (error) {
+    } catch (error) {
       console.log(error);
       return {
         status: -2,
-        message: error.message
+        message: error.message,
       };
     }
   },
@@ -94,7 +137,12 @@ const zaloService = {
       id = id.replace("g", "").trim();
       let groupMembers = [];
       // Lấy tham số và id thành viên group
-      const resGetIds = await zaloWebApi.getGroupMemberIds(cookie, imei, secretKey, id);
+      const resGetIds = await zaloWebApi.getGroupMemberIds(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
       if (resGetIds.error_code != 0)
         return {
           status: -1,
@@ -104,7 +152,7 @@ const zaloService = {
       const creatorId = resGetIds.data.gridInfoMap[id].creatorId;
       const adminIds = resGetIds.data.gridInfoMap[id].adminIds;
       const ids = resGetIds.data.gridInfoMap[id].memVerList;
-  
+
       // Lấy thông tin thành viên group
       let iGetInfo = 0;
       const chunkSize = 300;
@@ -137,26 +185,28 @@ const zaloService = {
           );
         }
       }
-  
+
       groupMembers = groupMembers
         .filter((x) => x.contactKey.includes("Trưởng"))
         .concat(groupMembers.filter((x) => x.contactKey.includes("Phó")))
-        .concat(groupMembers.filter((x) => x.contactKey.includes("Thành viên")));
-  
+        .concat(
+          groupMembers.filter((x) => x.contactKey.includes("Thành viên"))
+        );
+
       if (groupMembers.length == 0)
         return {
           status: -1,
-          message: "Không tìm thấy thành viên group"
+          message: "Không tìm thấy thành viên group",
         };
-  
+
       return {
         status: 1,
-        data: groupMembers
+        data: groupMembers,
       };
     } catch (error) {
       return {
         status: -2,
-        message: error.message
+        message: error.message,
       };
     }
   },
@@ -167,16 +217,20 @@ const zaloService = {
       let isHasMore = true;
       // Lấy tham số và id thành viên group
       while (isHasMore) {
-        const resGetGroup = await zaloWebApi.getGroupByLink(cookie, imei, secretKey, link, mpage++);
-        if (resGetGroup.error_code != 0)
-        {
+        const resGetGroup = await zaloWebApi.getGroupByLink(
+          cookie,
+          imei,
+          secretKey,
+          link,
+          mpage++
+        );
+        if (resGetGroup.error_code != 0) {
           if (groupMembers.length == 0)
             return {
               status: -1,
               message: resGetGroup.error_message,
             };
-          else
-            break;
+          else break;
         }
         isHasMore = resGetGroup.data.hasMoreMember == 1;
         const isCommunity = resGetGroup.data.type == 2;
@@ -193,35 +247,37 @@ const zaloService = {
                   ? "Trưởng cộng đồng"
                   : "Trưởng nhóm"
                 : adminIds.includes(x.id)
-                  ? isCommunity
-                    ? "Phó cộng đồng"
-                    : "Phó nhóm"
-                  : "Thành viên",
-              uid: getUidFromAvatarLink(x.avatar),
-              groupUserId: x.id,
-              avatarLink: x.avatar,
-            }))
+                ? isCommunity
+                  ? "Phó cộng đồng"
+                  : "Phó nhóm"
+                : "Thành viên",
+            uid: getUidFromAvatarLink(x.avatar),
+            groupUserId: x.id,
+            avatarLink: x.avatar,
+          }))
         );
       }
       groupMembers = groupMembers
         .filter((x) => x.contactKey.includes("Trưởng"))
         .concat(groupMembers.filter((x) => x.contactKey.includes("Phó")))
-        .concat(groupMembers.filter((x) => x.contactKey.includes("Thành viên")));
-  
+        .concat(
+          groupMembers.filter((x) => x.contactKey.includes("Thành viên"))
+        );
+
       if (groupMembers.length == 0)
         return {
           status: -1,
-          message: "Không tìm thấy thành viên group"
+          message: "Không tìm thấy thành viên group",
         };
 
       return {
         status: 1,
-        data: groupMembers
+        data: groupMembers,
       };
     } catch (error) {
       return {
         status: -2,
-        message: error.message
+        message: error.message,
       };
     }
   },
@@ -246,23 +302,127 @@ const zaloService = {
   async shareSms(cookie, imei, secretKey, paramIds, content) {
     return zaloWebApi.shareSms(cookie, imei, secretKey, paramIds, content);
   },
-  async quote(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent) {
-    return zaloWebApi.quote(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent);
+  async quote(
+    cookie,
+    imei,
+    secretKey,
+    id,
+    content,
+    ownerId,
+    msgId,
+    cliMsgId,
+    type,
+    msgTs,
+    msgContent
+  ) {
+    return zaloWebApi.quote(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      content,
+      ownerId,
+      msgId,
+      cliMsgId,
+      type,
+      msgTs,
+      msgContent
+    );
   },
-  async quoteGroup(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent) {
-    return zaloWebApi.quoteGroup(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent);
+  async quoteGroup(
+    cookie,
+    imei,
+    secretKey,
+    id,
+    content,
+    ownerId,
+    msgId,
+    cliMsgId,
+    type,
+    msgTs,
+    msgContent
+  ) {
+    return zaloWebApi.quoteGroup(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      content,
+      ownerId,
+      msgId,
+      cliMsgId,
+      type,
+      msgTs,
+      msgContent
+    );
   },
-  async reactMessage(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType) {
-    return zaloWebApi.reactMessage(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType);
+  async reactMessage(
+    cookie,
+    imei,
+    secretKey,
+    id,
+    msgId,
+    cliMsgId,
+    type,
+    rIcon,
+    rType
+  ) {
+    return zaloWebApi.reactMessage(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      msgId,
+      cliMsgId,
+      type,
+      rIcon,
+      rType
+    );
   },
-  async reactMessageGroup(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType) {
-    return zaloWebApi.reactMessageGroup(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType);
+  async reactMessageGroup(
+    cookie,
+    imei,
+    secretKey,
+    id,
+    msgId,
+    cliMsgId,
+    type,
+    rIcon,
+    rType
+  ) {
+    return zaloWebApi.reactMessageGroup(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      msgId,
+      cliMsgId,
+      type,
+      rIcon,
+      rType
+    );
   },
   async searchPhone(cookie, imei, secretKey, phone) {
     return zaloWebApi.searchPhone(cookie, imei, secretKey, phone);
   },
-  async getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language) {
-    return zaloWebApi.getSecretKey(cookie, imei, enc_ver, apiType, apiVersion, computerName, language);
+  async getSecretKey(
+    cookie,
+    imei,
+    enc_ver,
+    apiType,
+    apiVersion,
+    computerName,
+    language
+  ) {
+    return zaloWebApi.getSecretKey(
+      cookie,
+      imei,
+      enc_ver,
+      apiType,
+      apiVersion,
+      computerName,
+      language
+    );
   },
   async getProfile(cookie, imei, secretKey, id) {
     return zaloWebApi.getProfile(cookie, imei, secretKey, id);
@@ -274,15 +434,32 @@ const zaloService = {
     return zaloWebApi.uploadImage(cookie, imei, secretKey, id, file);
   },
   async sendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content) {
-    return zaloWebApi.sendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+    return zaloWebApi.sendImage(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      imgUrl,
+      imgInfo,
+      content
+    );
   },
   async groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content) {
-    return zaloWebApi.groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+    return zaloWebApi.groupSendImage(
+      cookie,
+      imei,
+      secretKey,
+      id,
+      imgUrl,
+      imgInfo,
+      content
+    );
   },
   async loginQR() {
     return new Promise((resolve, reject) => {
       try {
-        const sessionId = Date.now() + "_" + Math.random().toString(36).substring(2, 15);
+        const sessionId =
+          Date.now() + "_" + Math.random().toString(36).substring(2, 15);
 
         const zalo = new Zalo({
           // agent: new HttpsProxyAgent(
@@ -298,29 +475,38 @@ const zaloService = {
         GLOBAL_LOGIN_SESSION[sessionId] = {
           status: "waiting",
           data: null,
-          timestamp: Date.now()
+          timestamp: Date.now(),
         };
 
         // Tạo QR
-        zalo.loginQR({
-          userAgent: "", // không bắt buộc
-          qrPath: "", // đường dẫn lưu QR, mặc định ./qr.png
-        }, (qrcode) => {
-          // Trả về sessionId và data QR code
-          resolve({
-            sessionId,
-            data: qrcode
+        zalo
+          .loginQR(
+            {
+              userAgent: "", // không bắt buộc
+              qrPath: "", // đường dẫn lưu QR, mặc định ./qr.png
+            },
+            (qrcode) => {
+              // Trả về sessionId và data QR code
+              resolve({
+                sessionId,
+                data: qrcode,
+              });
+            }
+          )
+          .then((api) => {
+            // Khi user quét xong QR và đăng nhập, kết quả trả ra ở đây
+            api.fetchAccountInfo().then((user) => {
+              GLOBAL_LOGIN_SESSION[sessionId].status = "success";
+              GLOBAL_LOGIN_SESSION[sessionId].data = {
+                ctx: api.getContext(),
+                user,
+              };
+            });
+          })
+          .catch((err) => {
+            GLOBAL_LOGIN_SESSION[sessionId].status = "error";
+            GLOBAL_LOGIN_SESSION[sessionId].error = "QR code đã hết hạn";
           });
-        }).then(api => {
-          // Khi user quét xong QR và đăng nhập, kết quả trả ra ở đây
-          api.fetchAccountInfo().then(user => {
-            GLOBAL_LOGIN_SESSION[sessionId].status = "success";
-            GLOBAL_LOGIN_SESSION[sessionId].data = { ctx: api.getContext(), user };
-          });
-        }).catch(err => {
-          GLOBAL_LOGIN_SESSION[sessionId].status = "error";
-          GLOBAL_LOGIN_SESSION[sessionId].error = "QR code đã hết hạn";
-        });
       } catch (error) {
         reject(error);
       }
@@ -332,21 +518,21 @@ const zaloService = {
       if (!session) {
         return {
           status: -1,
-          message: "Session không tồn tại hoặc đã hết hạn"
+          message: "Session không tồn tại hoặc đã hết hạn",
         };
       }
 
       const { status, data, error, timestamp } = session;
-      
+
       // Check if QR code is expired (after 2 minutes)
       const now = Date.now();
       const expirationTime = 2 * 60 * 1000; // 2 minutes in milliseconds
-      
+
       if (now - timestamp > expirationTime && status === "waiting") {
         delete GLOBAL_LOGIN_SESSION[sessionId];
         return {
           status: -1,
-          message: "QR code đã hết hạn"
+          message: "QR code đã hết hạn",
         };
       }
 
@@ -354,27 +540,27 @@ const zaloService = {
       if (status === "waiting") {
         return {
           status: 0,
-          message: "Đang chờ quét QR"
+          message: "Đang chờ quét QR",
         };
       } else if (status === "success") {
         // Clean up session data after successful retrieval
         delete GLOBAL_LOGIN_SESSION[sessionId];
         return {
           status: 1,
-          data: data
+          data: data,
         };
       } else if (status === "error") {
         // Clean up session data after error retrieval
         delete GLOBAL_LOGIN_SESSION[sessionId];
         return {
           status: -2,
-          message: error
+          message: error,
         };
       }
     } catch (error) {
       return {
         status: -2,
-        message: error.message
+        message: error.message,
       };
     }
   },
