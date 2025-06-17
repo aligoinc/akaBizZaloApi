@@ -341,12 +341,12 @@ export const getInfoImageFromUrl = async (url) => {
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
     const metadata = await sharp(Buffer.from(buffer)).metadata();
-    
+
     // Return image dimensions similar to what Image would provide
     return {
       width: metadata.width,
       height: metadata.height,
-      url
+      url,
     };
   } catch (error) {
     console.error("Có lỗi khi lấy kích thước ảnh:", error);
