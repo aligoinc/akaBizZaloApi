@@ -1,6 +1,7 @@
 import campaignApi from "../akaBizApis/campaignApi.js";
 import shopApi from "../akaBizApis/shopApi.js";
 import {
+  getDateNow,
   getInfoImageFromUrl,
   getRandomArray,
   replaceVocative,
@@ -778,6 +779,88 @@ const runCampaign = async (shop) => {
               await sleep(campaign.timeSleepBetween2 * 1000);
             }
           }
+        } else if (campaign.campaignActionId === SEND_HPBD) {
+          const resGetFriends = await zaloWebApi.getFriends(
+            shop.zaloCookies,
+            shop.zaloImei,
+            shop.zaloSecretKey
+          );
+          if (resGetFriends.error_code === 0) {
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, "0"); // Lấy ngày, thêm số 0 nếu <10
+            const month = String(today.getMonth() + 1).padStart(2, "0"); // Lấy tháng (getMonth trả về 0-11 nên +1), thêm số 0 nếu <10
+            const todayStr = `${day}/${month}`;
+
+            let contacts = resGetFriends.data.filter(
+              (x) => x.sdob?.slice(0, 5) === todayStr
+            );
+
+            let contents = (campaign.contentMessage ?? "")
+              .split("|")
+              .map((content) => content.trim())
+              .filter((content) => content);
+            if (contents.length == 0) contents.push("");
+            let iContent = 0;
+
+            for (i = 0; i < contacts.length; i++) {
+              try {
+                // Kiểm tra giới hạn gửi trong ngày
+                if (countProcessed >= (campaign.countSendingOfDay ?? 0)) break;
+
+                let content = contents[iContent];
+                // Thực hiện gửi tin nhắn
+                let resSend = await sendToFriend(
+                  api,
+                  shop.zaloCookies,
+                  shop.zaloImei,
+                  shop.zaloSecretKey,
+                  campaign.shopId,
+                  contacts[i].userId,
+                  content,
+                  campaign.isContentAI,
+                  campaign.media,
+                  campaign.isSendFolderMedia,
+                  campaign.isRandomFolderMedia,
+                  campaign.countRandomFolderMedia,
+                  campaign.isAddTag,
+                  campaign.tagName
+                );
+                iContent++;
+                if (iContent >= contents.length) iContent = 0;
+
+                // Cập nhật trạng thái detail
+                await campaignApi.addCampaignDetail({
+                  campaignId: campaign.id,
+                  status: resSend.status,
+                  errorMessage: resSend.message,
+                  contentMessage: resSend.content?.slice(0, 4000) ?? "",
+                  name: resSend.info?.name ?? null,
+                  uid: resSend.info?.uid ?? null,
+                  postLink: resSend.info?.avatarLink ?? null,
+                  friendStatus: resSend.info?.friendStatus ?? null,
+                  dateProcessed: getDateNow(),
+                });
+
+                // addNote(
+                //   `${getDateTimeNow()} - Nhắn tin chúc mừng sinh nhật - ${
+                //     campaign.details[i].name
+                //   } - ${resSend.message}`
+                // );
+                countProcessed++;
+                await sleep(campaign.timeSleepBetween2 * 1000);
+              } catch (e) {
+                console.log("Lỗi khi Nhắn tin chúc mừng sinh nhật: ", e);
+
+                // addNote(
+                //   `${getDateTimeNow()} - Gửi tin nhắn CMSN - Thất bại - Có lỗi xảy ra`
+                // );
+
+                await sleep(campaign.timeSleepBetween2 * 1000);
+              }
+            }
+          } else {
+            console.log(resGetFriends.error_message);
+          }
         }
         // Kết thúc
         if (isLimitSearchPhone) {
@@ -794,7 +877,10 @@ const runCampaign = async (shop) => {
           //   } - Hết lượt tìm kiếm SĐT - Tạm nghỉ 60 phút`
           // );
         } else {
-          if (countProcessed >= (campaign.countSendingOfHour ?? 9)) {
+          if (
+            countProcessed >= (campaign.countSendingOfHour ?? 9) &&
+            campaign.campaignActionId != SEND_HPBD
+          ) {
             if (i == campaign.details.length) {
               await campaignApi.changeStatusCampaign(campaign.id, "Hoàn thành");
               // addNote(
@@ -816,7 +902,6 @@ const runCampaign = async (shop) => {
           } else if (countProcessed >= (campaign.countSendingOfDay ?? 0)) {
             if (
               (i == campaign.details.length &&
-                campaign.campaignActionId != SEND_HPBD &&
                 campaign.campaignActionId != CANCEL_REQUEST) ||
               (campaign.campaignActionId == CANCEL_REQUEST &&
                 countProcessed + (campaign.countActionProcessed ?? 0) >=
