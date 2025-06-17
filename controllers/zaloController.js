@@ -1,4 +1,4 @@
-import zaloService from '../services/zaloService.js';
+import zaloService from "../services/zaloService.js";
 
 /**
  * Controller layer cho các API Zalo Web
@@ -7,7 +7,13 @@ const zaloController = {
   async addFriend(req, res) {
     try {
       const { cookie, imei, secretKey, id, content } = req.body;
-      const result = await zaloService.addFriend(cookie, imei, secretKey, id, content);
+      const result = await zaloService.addFriend(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -16,7 +22,12 @@ const zaloController = {
   async removeFriend(req, res) {
     try {
       const { cookie, imei, secretKey, id } = req.body;
-      const result = await zaloService.removeFriend(cookie, imei, secretKey, id);
+      const result = await zaloService.removeFriend(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -25,7 +36,13 @@ const zaloController = {
   async rename(req, res) {
     try {
       const { cookie, imei, secretKey, id, newName } = req.body;
-      const result = await zaloService.rename(cookie, imei, secretKey, id, newName);
+      const result = await zaloService.rename(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        newName
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -52,7 +69,52 @@ const zaloController = {
   async getReqStatus(req, res) {
     try {
       const { cookie, imei, secretKey, id } = req.body;
-      const result = await zaloService.getReqStatus(cookie, imei, secretKey, id);
+      const result = await zaloService.getReqStatus(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  async getReceivedFriend(req, res) {
+    try {
+      const { cookie, imei, secretKey } = req.body;
+      const result = await zaloService.getReceivedFriend(
+        cookie,
+        imei,
+        secretKey
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  async getRequestedFriend(req, res) {
+    try {
+      const { cookie, imei, secretKey } = req.body;
+      const result = await zaloService.getRequestedFriend(
+        cookie,
+        imei,
+        secretKey
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+  async undoRequestedFriend(req, res) {
+    try {
+      const { cookie, imei, secretKey, id } = req.body;
+      const result = await zaloService.undoRequestedFriend(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -79,7 +141,12 @@ const zaloController = {
   async getGroupInfos(req, res) {
     try {
       const { cookie, imei, secretKey, ids } = req.body;
-      const result = await zaloService.getGroupInfos(cookie, imei, secretKey, ids);
+      const result = await zaloService.getGroupInfos(
+        cookie,
+        imei,
+        secretKey,
+        ids
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -88,7 +155,12 @@ const zaloController = {
   async getGroupMembers(req, res) {
     try {
       const { cookie, imei, secretKey, id } = req.body;
-      const result = await zaloService.getGroupMembers(cookie, imei, secretKey, id);
+      const result = await zaloService.getGroupMembers(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -97,7 +169,12 @@ const zaloController = {
   async getGroupMembersByLink(req, res) {
     try {
       const { cookie, imei, secretKey, link } = req.body;
-      const result = await zaloService.getGroupMembersByLink(cookie, imei, secretKey, link);
+      const result = await zaloService.getGroupMembersByLink(
+        cookie,
+        imei,
+        secretKey,
+        link
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -106,7 +183,12 @@ const zaloController = {
   async getGroupMemberIds(req, res) {
     try {
       const { cookie, imei, secretKey, id } = req.body;
-      const result = await zaloService.getGroupMemberIds(cookie, imei, secretKey, id);
+      const result = await zaloService.getGroupMemberIds(
+        cookie,
+        imei,
+        secretKey,
+        id
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -115,7 +197,12 @@ const zaloController = {
   async getGroupMemberInfos(req, res) {
     try {
       const { cookie, imei, secretKey, ids } = req.body;
-      const result = await zaloService.getGroupMemberInfos(cookie, imei, secretKey, ids);
+      const result = await zaloService.getGroupMemberInfos(
+        cookie,
+        imei,
+        secretKey,
+        ids
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -133,7 +220,13 @@ const zaloController = {
   async createGroup(req, res) {
     try {
       const { cookie, imei, secretKey, groupName, contacts } = req.body;
-      const result = await zaloService.createGroup(cookie, imei, secretKey, groupName, contacts);
+      const result = await zaloService.createGroup(
+        cookie,
+        imei,
+        secretKey,
+        groupName,
+        contacts
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -142,7 +235,13 @@ const zaloController = {
   async inviteGroup(req, res) {
     try {
       const { cookie, imei, secretKey, id, memberIds } = req.body;
-      const result = await zaloService.inviteGroup(cookie, imei, secretKey, id, memberIds);
+      const result = await zaloService.inviteGroup(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        memberIds
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -151,7 +250,13 @@ const zaloController = {
   async groupSendMsg(req, res) {
     try {
       const { cookie, imei, secretKey, id, content } = req.body;
-      const result = await zaloService.groupSendMsg(cookie, imei, secretKey, id, content);
+      const result = await zaloService.groupSendMsg(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -160,7 +265,13 @@ const zaloController = {
   async shareSms(req, res) {
     try {
       const { cookie, imei, secretKey, paramIds, content } = req.body;
-      const result = await zaloService.shareSms(cookie, imei, secretKey, paramIds, content);
+      const result = await zaloService.shareSms(
+        cookie,
+        imei,
+        secretKey,
+        paramIds,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -168,8 +279,32 @@ const zaloController = {
   },
   async quote(req, res) {
     try {
-      const { cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent } = req.body;
-      const result = await zaloService.quote(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent);
+      const {
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content,
+        ownerId,
+        msgId,
+        cliMsgId,
+        type,
+        msgTs,
+        msgContent,
+      } = req.body;
+      const result = await zaloService.quote(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content,
+        ownerId,
+        msgId,
+        cliMsgId,
+        type,
+        msgTs,
+        msgContent
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -177,8 +312,32 @@ const zaloController = {
   },
   async quoteGroup(req, res) {
     try {
-      const { cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent } = req.body;
-      const result = await zaloService.quoteGroup(cookie, imei, secretKey, id, content, ownerId, msgId, cliMsgId, type, msgTs, msgContent);
+      const {
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content,
+        ownerId,
+        msgId,
+        cliMsgId,
+        type,
+        msgTs,
+        msgContent,
+      } = req.body;
+      const result = await zaloService.quoteGroup(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content,
+        ownerId,
+        msgId,
+        cliMsgId,
+        type,
+        msgTs,
+        msgContent
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -186,8 +345,28 @@ const zaloController = {
   },
   async reactMessage(req, res) {
     try {
-      const { cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType } = req.body;
-      const result = await zaloService.reactMessage(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType);
+      const {
+        cookie,
+        imei,
+        secretKey,
+        id,
+        msgId,
+        cliMsgId,
+        type,
+        rIcon,
+        rType,
+      } = req.body;
+      const result = await zaloService.reactMessage(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        msgId,
+        cliMsgId,
+        type,
+        rIcon,
+        rType
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -195,8 +374,28 @@ const zaloController = {
   },
   async reactMessageGroup(req, res) {
     try {
-      const { cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType } = req.body;
-      const result = await zaloService.reactMessageGroup(cookie, imei, secretKey, id, msgId, cliMsgId, type, rIcon, rType);
+      const {
+        cookie,
+        imei,
+        secretKey,
+        id,
+        msgId,
+        cliMsgId,
+        type,
+        rIcon,
+        rType,
+      } = req.body;
+      const result = await zaloService.reactMessageGroup(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        msgId,
+        cliMsgId,
+        type,
+        rIcon,
+        rType
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -205,7 +404,12 @@ const zaloController = {
   async searchPhone(req, res) {
     try {
       const { cookie, imei, secretKey, phone } = req.body;
-      const result = await zaloService.searchPhone(cookie, imei, secretKey, phone);
+      const result = await zaloService.searchPhone(
+        cookie,
+        imei,
+        secretKey,
+        phone
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -223,7 +427,13 @@ const zaloController = {
   async sms(req, res) {
     try {
       const { cookie, imei, secretKey, id, content } = req.body;
-      const result = await zaloService.sms(cookie, imei, secretKey, id, content);
+      const result = await zaloService.sms(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -233,7 +443,13 @@ const zaloController = {
     try {
       const { cookie, imei, secretKey, id } = req.body;
       const file = req.file;
-      const result = await zaloService.uploadImage(cookie, imei, secretKey, id, file);
+      const result = await zaloService.uploadImage(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        file
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -241,8 +457,17 @@ const zaloController = {
   },
   async sendImage(req, res) {
     try {
-      const { cookie, imei, secretKey, id, imgUrl, imgInfo, content } = req.body;
-      const result = await zaloService.sendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+      const { cookie, imei, secretKey, id, imgUrl, imgInfo, content } =
+        req.body;
+      const result = await zaloService.sendImage(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        imgUrl,
+        imgInfo,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -250,8 +475,17 @@ const zaloController = {
   },
   async groupSendImage(req, res) {
     try {
-      const { cookie, imei, secretKey, id, imgUrl, imgInfo, content } = req.body;
-      const result = await zaloService.groupSendImage(cookie, imei, secretKey, id, imgUrl, imgInfo, content);
+      const { cookie, imei, secretKey, id, imgUrl, imgInfo, content } =
+        req.body;
+      const result = await zaloService.groupSendImage(
+        cookie,
+        imei,
+        secretKey,
+        id,
+        imgUrl,
+        imgInfo,
+        content
+      );
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -262,32 +496,32 @@ const zaloController = {
       const result = await zaloService.loginQR();
       res.json(result);
     } catch (error) {
-      res.status(500).json({ 
-        status: -2, 
-        message: error.message
+      res.status(500).json({
+        status: -2,
+        message: error.message,
       });
     }
   },
-  
+
   async getLoginInfo(req, res) {
     try {
       const { sessionId } = req.body;
       if (!sessionId) {
-        return res.status(400).json({ 
-          status: -1, 
-          message: "Session ID is required" 
+        return res.status(400).json({
+          status: -1,
+          message: "Session ID is required",
         });
       }
-      
+
       const result = await zaloService.getLoginInfo(sessionId);
       res.json(result);
     } catch (error) {
-      res.status(500).json({ 
+      res.status(500).json({
         status: -2,
-        message: error.message
+        message: error.message,
       });
     }
-  }
+  },
 };
 
 export default zaloController;

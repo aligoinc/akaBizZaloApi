@@ -755,7 +755,7 @@ const zaloWebApi = {
         })
       )
     );
-    
+
     const url = `https://tt-group-wpa.chat.zalo.me/api/group/link/ginfo?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}`;
 
     return fetch(url, {
@@ -1249,6 +1249,117 @@ const zaloWebApi = {
     var urlencoded = new URLSearchParams();
     urlencoded.append("params", params);
     const url = `https://tt-group-wpa.chat.zalo.me/api/group/quote?zpw_ver=${apiVersion}&zpw_type=${apiType}&nretry=0`;
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        Cookie: cookie,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: urlencoded,
+      redirect: "follow",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        return result.data
+          ? JSON.parse(decodeAESwithSecretKey(secretKey, result.data))
+          : result;
+      })
+      .catch((error) => {
+        // Xử lý lỗi ở đây nếu cần
+        console.error("Fetch error:", error);
+        throw error;
+      });
+  },
+  getReceivedFriend: (cookie, imei, secretKey) => {
+    const params = encodeURIComponent(
+      encodeAESwithSecretKey(
+        secretKey,
+        JSON.stringify({
+          imei: imei,
+        })
+      )
+    );
+
+    const url = `https://tt-friend-wpa.chat.zalo.me/api/friend/recommendsv2/list?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}`;
+
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        Cookie: cookie,
+      },
+      redirect: "follow",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        return result.data
+          ? JSON.parse(decodeAESwithSecretKey(secretKey, result.data))
+          : result;
+      })
+      .catch((error) => {
+        // Xử lý lỗi ở đây nếu cần
+        console.error("Fetch error:", error);
+        throw error;
+      });
+  },
+  getRequestedFriend: (cookie, imei, secretKey) => {
+    const params = encodeURIComponent(
+      encodeAESwithSecretKey(
+        secretKey,
+        JSON.stringify({
+          imei: imei,
+        })
+      )
+    );
+
+    const url = `https://tt-friend-wpa.chat.zalo.me/api/friend/requested/list?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}`;
+
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        Cookie: cookie,
+      },
+      redirect: "follow",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        return result.data
+          ? JSON.parse(decodeAESwithSecretKey(secretKey, result.data))
+          : result;
+      })
+      .catch((error) => {
+        // Xử lý lỗi ở đây nếu cần
+        console.error("Fetch error:", error);
+        throw error;
+      });
+  },
+  undoRequestedFriend: (cookie, imei, secretKey, id) => {
+    const params = encodeAESwithSecretKey(
+      secretKey,
+      JSON.stringify({
+        fid: id,
+      })
+    );
+    var urlencoded = new URLSearchParams();
+    urlencoded.append("params", params);
+    const url = `https://tt-friend-wpa.chat.zalo.me/api/friend/undo?zpw_ver=${apiVersion}&zpw_type=${apiType}`;
     return fetch(url, {
       method: "POST",
       headers: {
