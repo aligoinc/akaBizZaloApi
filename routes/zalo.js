@@ -455,6 +455,30 @@ router.post("/undo-requested-friend", zaloController.undoRequestedFriend);
 
 /**
  * @swagger
+ * /zalo/get-account-info:
+ *   post:
+ *     summary: Lấy thông tin tài khoản
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cookie:
+ *                 type: string
+ *               imei:
+ *                 type: string
+ *               secretKey:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Thành công
+ */
+router.post("/get-account-info", zaloController.getAccountInfo);
+
+/**
+ * @swagger
  * /zalo/get-groups:
  *   post:
  *     summary: Lấy danh sách group

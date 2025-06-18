@@ -85,6 +85,9 @@ const zaloService = {
   async undoRequestedFriend(cookie, imei, secretKey, id) {
     return zaloWebApi.undoRequestedFriend(cookie, imei, secretKey, id);
   },
+  async getAccountInfo(cookie, imei, secretKey) {
+    return zaloWebApi.getAccountInfo(cookie, imei, secretKey);
+  },
   async getGroups(cookie, imei, secretKey) {
     try {
       const resGetGroupIds = await zaloWebApi.getGroupIds(
