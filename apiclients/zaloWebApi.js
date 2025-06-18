@@ -1387,6 +1387,44 @@ const zaloWebApi = {
         throw error;
       });
   },
+  getAccountInfo: (cookie, imei, secretKey) => {
+    const params = encodeURIComponent(
+      encodeAESwithSecretKey(
+        secretKey,
+        JSON.stringify({
+          avatar_size: 120,
+          imei: imei,
+        })
+      )
+    );
+
+    const url = `https://tt-profile-wpa.chat.zalo.me/api/social/profile/me-v2?zpw_ver=${apiVersion}&zpw_type=${apiType}&params=${params}`;
+
+    return fetch(url, {
+      method: "GET",
+      headers: {
+        Cookie: cookie,
+      },
+      redirect: "follow",
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+      })
+      .then((result) => {
+        return result.data
+          ? JSON.parse(decodeAESwithSecretKey(secretKey, result.data))
+          : result;
+      })
+      .catch((error) => {
+        // Xử lý lỗi ở đây nếu cần
+        console.error("Fetch error:", error);
+        throw error;
+      });
+  },
 };
 
 export default zaloWebApi;

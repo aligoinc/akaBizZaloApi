@@ -120,6 +120,15 @@ const zaloController = {
       res.status(500).json({ error: error.message });
     }
   },
+  async getAccountInfo(req, res) {
+    try {
+      const { cookie, imei, secretKey } = req.body;
+      const result = await zaloService.getAccountInfo(cookie, imei, secretKey);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
   async getGroups(req, res) {
     try {
       const { cookie, imei, secretKey } = req.body;
