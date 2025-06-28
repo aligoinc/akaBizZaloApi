@@ -288,6 +288,68 @@ export const replaceVocative = (content, gender) => {
   }
 };
 
+export const replaceVocative2 = (content, gender) => {
+  try {
+    // Biểu thức chính quy để tìm chuỗi theo mẫu #{SEX{...}}
+    // Biểu thức chính quy để tìm chuỗi theo mẫu #{SEX{...}}
+    return content.replace(/#\{SEX\{([^}]+)\}\}/g, (match, optionsString) => {
+      // Tách các lựa chọn bên trong dấu ngoặc nhọn
+      const options = optionsString.split("-");
+
+      // Xác định vị trí dựa trên giới tính
+      let selectedIndex;
+      switch (gender) {
+        case "Nam":
+          selectedIndex = 0;
+          break;
+        case "Nữ":
+          selectedIndex = 1;
+          break;
+        default:
+          selectedIndex = 2;
+      }
+
+      // Trả về giá trị thay thế nếu có thể, nếu không trả về mặc định
+      return options[selectedIndex] || options[options.length - 1];
+    });
+  } catch (error) {
+    console.log(error);
+    return content;
+  }
+};
+
+export function formatDate(date, format) {
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Tháng trong JavaScript bắt đầu từ 0
+  const year = date.getFullYear();
+
+  return format.replace("DD", day).replace("MM", month).replace("YYYY", year);
+}
+
+export function replaceDatePlaceholders(content) {
+  // Tìm tất cả các chuỗi theo mẫu #{...}
+  return content.replace(
+    /#\{(TODAY|TOMORROW|YESTERDAY)\((.*?)\)\}/g,
+    (match, keyword, format) => {
+      let date = new Date();
+
+      switch (keyword) {
+        case "TOMORROW":
+          date.setDate(date.getDate() + 1);
+          break;
+        case "YESTERDAY":
+          date.setDate(date.getDate() - 1);
+          break;
+        default:
+          break;
+      }
+
+      // Định dạng và trả về ngày
+      return formatDate(date, format);
+    }
+  );
+}
+
 export function removeEmoji(text) {
   if (!text?.trim()) return "";
   return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, "");
