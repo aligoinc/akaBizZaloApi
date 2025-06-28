@@ -427,9 +427,6 @@ const zaloService = {
       language
     );
   },
-  async getProfile(cookie, imei, secretKey, id) {
-    return zaloWebApi.getProfile(cookie, imei, secretKey, id);
-  },
   async sms(cookie, imei, secretKey, id, content) {
     return zaloWebApi.sms(cookie, imei, secretKey, id, content);
   },

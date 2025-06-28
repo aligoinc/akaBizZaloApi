@@ -4,7 +4,9 @@ import {
   getDateNow,
   getInfoImageFromUrl,
   getRandomArray,
+  replaceDatePlaceholders,
   replaceVocative,
+  replaceVocative2,
   sleep,
   urlToBlob,
 } from "../utils/common.js";
@@ -1121,6 +1123,13 @@ const sendToPhone = async (
         content?.replaceAll("[fullname_web]", info?.name ?? ""),
         info?.gender
       );
+      content = content?.replaceAll("#{ORIGINAL_NAME}", "#{FULL_NAME}");
+      content = replaceVocative2(
+        replaceDatePlaceholders(
+          content?.replaceAll("#{FULL_NAME}", info?.name ?? "")
+        ),
+        info?.gender
+      );
       // if (isContentAI && content?.trim()) {
       //   content = (
       //     await aiApi.chat2(content, "write_content", shopId, "zalo_extension")
@@ -1346,6 +1355,13 @@ const sendToGroup = async (
       content?.replaceAll("[fullname_web]", info?.name ?? ""),
       info?.gender
     );
+    content = content?.replaceAll("#{ORIGINAL_NAME}", "#{FULL_NAME}");
+    content = replaceVocative2(
+      replaceDatePlaceholders(
+        content?.replaceAll("#{FULL_NAME}", info?.name ?? "")
+      ),
+      info?.gender
+    );
 
     // if (isContentAI && content?.trim()) {
     //   content = (
@@ -1494,6 +1510,13 @@ const sendToFriend = async (
     );
     content = replaceVocative(
       content?.replaceAll("[fullname_web]", info?.name ?? ""),
+      info?.gender
+    );
+    content = content?.replaceAll("#{ORIGINAL_NAME}", "#{FULL_NAME}");
+    content = replaceVocative2(
+      replaceDatePlaceholders(
+        content?.replaceAll("#{FULL_NAME}", info?.name ?? "")
+      ),
       info?.gender
     );
     // if (isContentAI && content?.trim()) {
@@ -1772,6 +1795,13 @@ const sendToGroupMember = async (
       content = content?.replaceAll("[fullname_original]", "[fullname_web]");
       content = replaceVocative(
         content?.replaceAll("[fullname_web]", info?.name ?? ""),
+        info?.gender
+      );
+      content = content?.replaceAll("#{ORIGINAL_NAME}", "#{FULL_NAME}");
+      content = replaceVocative2(
+        replaceDatePlaceholders(
+          content?.replaceAll("#{FULL_NAME}", info?.name ?? "")
+        ),
         info?.gender
       );
       // if (isContentAI && content?.trim()) {
